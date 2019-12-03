@@ -1,0 +1,82 @@
+Dynamics in 2D
+========================================================
+author: Eric J Sullivan
+date: 2019-11-26
+autosize: true
+font-family: Garamond
+
+Motivation & Examples
+========================================================
+
+Exploration of complex relationships can often be best accomplished with a useful visualization.  The behaviour of a system around a fixed point* is one such situation.  This [Dynamics in 2D: Shiny App](https://fishysua.shinyapps.io/Dynamicsin2d/) is my implementation following <b>Understanding Nonlinear Dynamics</b> Chapter 5 by Kaplan and Glass
+
+The code I developed can be found here: [Dynamics in 2D: Code Repository](https://github.com/Fishysua/Dynamicsin2D)
+
+<small>*A fixed point is one where the rate of change for all parameters is zero.  In the app, this is the point (0,0)</small>
+
+Examples
+========================================================
+-A harmonic oscillator, such as a mass on a spring, can be modeled using this approach by using phase space.  For such a system assume position is x and velocity is y then dy/dt = a = -k/m * x therefore dy/dx = -k/m and dx/dy = 1, any damping factor, such as friction (f), would be dy/dy = -f.
+
+-The electric potential of a nerve cell can be locally linearized to dv/dt = -a v-w and dw/dt = e v - e g w, where a, e, and g are parameters and v and w are the dynamic variables
+
+-Mutual inhibition of protein production in organism can result in similar behavior and fixed points occur in many other systems that can also be approximated in a locally linear approach.
+
+Behaviours
+========================================================
+In 2 dimensions, a fixed point can have a variety of local behaviours:
+
+- A node is if local behavior directs nearby values directly toward or away from the fixed point
+
+- A focus results because of a curve in the field causing points to trace spirals towards or away from the fixed point
+
+- A node or focus is stable or unstable depending upon if the field goes toward or away from the fixed point, respectively
+
+- A saddle point occurs when from on direction the field approaches the fixed point but it diverges from that point in another direction
+
+- Orbits are possible, but numerical solutions and any non-linear terms make them unlikely to be observed
+
+Grid Calculations
+========================================================
+Inputs generated to by the user, (here the defaults).
+
+```{r}
+input <- data.frame(-1, -1.9, 1.9, -1, -5, -2)
+names(input) <- c("dxdx","dxdy","dydx","dydy", "Initialx", "Initialy")
+
+```
+
+BaseGrid and FlowGrid demonstrate the flow of the field.  In the app, FlowGrid is reactive.
+
+```{r}
+SetupVector<- seq(-20,20, 41/20)
+  BaseGrid <- expand.grid(SetupVector,SetupVector)
+  names(BaseGrid) <- c("x","y")
+  
+  FlowGrid <- BaseGrid + .01 * c(input$dxdx*BaseGrid$x + input$dxdy*BaseGrid$y, input$dydx*BaseGrid$x + input$dydy*BaseGrid$y)
+```
+
+***
+A tracing path from an initial point can be calculated similarly.  The indented section is reactive in the app.
+```{r}
+lengthpath = 1000
+tracepath <- data.frame(x = 1:lengthpath, y = 1:lengthpath)
+  
+  tracepath[1,] <- c(input$Initialx,input$Initialy)
+    A <- input$dxdx 
+    B <- input$dxdy 
+    C <- input$dydx 
+    D <- input$dydy
+    for (i in 2: lengthpath) {
+      tracepath[i,] <- tracepath[i-1,] + .01 * c(A*tracepath[i-1,1] + B*tracepath[i-1,2], C*tracepath[i-1,1] + D*tracepath[i-1,2])}
+    
+```
+
+The plot of BaseGrid, FlowGrid and tracepath results in the apps output
+```{r, echo=FALSE}
+plot(BaseGrid, cex = .5, pch = 16, axes = FALSE)
+    points(FlowGrid, cex = 1)
+    points(input$Initialx,input$Initialy, pch = 13, cex = 3, col = "red")
+    lines(tracepath, col = "red")
+```
+
